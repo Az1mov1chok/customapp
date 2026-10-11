@@ -11,13 +11,26 @@ workflows:
           flutter create --platforms=ios --org com.livewalls .
       - name: Get Flutter packages
         script: flutter pub get
-      - name: Build iOS (no codesign)
+      - name: Install CocoaPods
         script: |
-          flutter build ios --release --no-codesign
+          cd ios && pod install && cd ..
+      - name: Build iOS via xcodebuild (no signing)
+        script: |
+          xcodebuild \
+            -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -sdk iphoneos \
+            -configuration Release \
+            -derivedDataPath build/ios_build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            PROVISIONING_PROFILE_SPECIFIER="" \
+            clean build
       - name: Create unsigned IPA
         script: |
           mkdir -p build/ios/iphoneos/Payload
-          cp -r build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/
+          cp -r build/ios_build/Build/Products/Release-iphoneos/Runner.app build/ios/iphoneos/Payload/
           cd build/ios/iphoneos
           zip -r app-unsigned.ipa Payload
     artifacts:

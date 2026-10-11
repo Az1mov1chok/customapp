@@ -1,0 +1,24 @@
+workflows:
+  ios-unsigned:
+    name: iOS Unsigned IPA (для AltStore/AltServer)
+    max_build_duration: 30
+    environment:
+      flutter: stable
+      xcode: latest
+    scripts:
+      - name: Generate missing platform files (ios/)
+        script: |
+          flutter create --platforms=ios --org com.livewalls .
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Build iOS (no codesign)
+        script: |
+          flutter build ios --release --no-codesign
+      - name: Create unsigned IPA
+        script: |
+          mkdir -p build/ios/iphoneos/Payload
+          cp -r build/ios/iphoneos/Runner.app build/ios/iphoneos/Payload/
+          cd build/ios/iphoneos
+          zip -r app-unsigned.ipa Payload
+    artifacts:
+      - build/ios/iphoneos/app-unsigned.ipa
